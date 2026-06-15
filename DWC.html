@@ -68,6 +68,12 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
 .filters{display:flex;gap:8px;padding:10px 14px 0;align-items:center;}
 .filter-pill{font-size:13px;font-weight:600;background:#fff;border:1px solid var(--line);border-radius:99px;padding:7px 14px;color:var(--text);cursor:pointer;}
 .filter-pill.active{background:#eff6ff;border-color:var(--blue);color:var(--blue);}
+.date-filter-row{display:flex;align-items:center;gap:8px;padding:8px 14px 0;}
+.date-filter-label{font-size:12px;color:var(--muted);font-weight:500;flex-shrink:0;}
+.date-filter-input{font-size:13px;font-weight:600;border:1px solid var(--line);border-radius:99px;padding:6px 12px;color:var(--text);background:#fff;cursor:pointer;outline:none;min-width:0;flex:1;}
+.date-filter-input:focus{border-color:var(--blue);}
+.date-filter-clear{font-size:12px;color:#fff;background:var(--blue);border-radius:99px;padding:4px 10px;cursor:pointer;white-space:nowrap;display:none;flex-shrink:0;}
+.date-filter-clear.show{display:block;}
 .result-count{font-size:13px;color:var(--muted);padding:10px 14px 0;}
 
 /* ── Order list & cards ── */
@@ -244,6 +250,11 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
     <button class="filter-pill" data-filter="draft" onclick="setFilter('draft')">我的草稿</button>
   </div>
   <div class="filters" id="team-filters"></div>
+  <div class="date-filter-row">
+    <span class="date-filter-label">📅 施作日期</span>
+    <input type="date" class="date-filter-input" id="date-filter-input" onchange="setDateFilter(this.value)">
+    <span class="date-filter-clear" id="date-filter-clear" onclick="clearDateFilter()">✕ 清除</span>
+  </div>
   <div class="result-count" id="result-count"></div>
   <div class="list" id="order-list"></div>
   <div class="bottom-nav">
@@ -523,7 +534,7 @@ const GROUPS = [
 const CATS = ['施工前','施工後','驗收單','其他'];
 
 /* ── Home page state ── */
-let curCat = 'all', curFilter = 'all', curTeam = 'all';
+let curCat = 'all', curFilter = 'all', curTeam = 'all', curDateFilter = '';
 
 function setCat(cat){
   curCat = cat;
@@ -538,6 +549,17 @@ function setFilter(f){
 function setTeam(team){
   curTeam = team;
   document.querySelectorAll('.team-pill').forEach(c => c.classList.toggle('active', c.dataset.team === team));
+  render();
+}
+function setDateFilter(val){
+  curDateFilter = val;
+  $('date-filter-clear').classList.toggle('show', !!val);
+  render();
+}
+function clearDateFilter(){
+  curDateFilter = '';
+  $('date-filter-input').value = '';
+  $('date-filter-clear').classList.remove('show');
   render();
 }
 function renderTeamFilters(){
@@ -567,12 +589,15 @@ function render(){
     if(curTeam !== 'all' && o.team !== curTeam) return false;
     if(curFilter === 'today' && o.specDate !== new Date().toLocaleDateString('sv-SE')) return false;
     if(curFilter === 'draft'  && getRuntimeStatus(o.id, o.status) !== 'draft') return false;
+    if(curDateFilter && o.specDate !== curDateFilter && o.dispatchDate !== curDateFilter) return false;
     if(q && !(o.store.includes(q) || o.id.includes(q) || o.address.includes(q))) return false;
     return true;
   });
-  document.getElementById('result-count').textContent = q
-    ? '搜尋「'+q+'」,共 '+items.length+' 筆'
-    : '共 '+items.length+' 筆'+(curFilter==='all'&&curCat==='all'?',顯示最近 / 最緊急的工單':'');
+  let countText;
+  if(q) countText = '搜尋「'+q+'」，共 '+items.length+' 筆';
+  else if(curDateFilter) countText = '📅 '+curDateFilter+'，共 '+items.length+' 筆';
+  else countText = '共 '+items.length+' 筆'+(curFilter==='all'&&curCat==='all'?'，顯示最近 / 最緊急的工單':'');
+  document.getElementById('result-count').textContent = countText;
   const list = document.getElementById('order-list');
   if(!items.length){
     list.innerHTML = '<div class="empty"><div class="icon">🔍</div><p>找不到符合的工單。</p></div>';
