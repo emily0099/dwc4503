@@ -609,7 +609,12 @@ function render(){
     if(q && !(o.store.includes(q) || o.id.includes(q) || o.address.includes(q))) return false;
     return true;
   });
-  items.sort((a,b) => (a.dispatchDate||'').localeCompare(b.dispatchDate||''));
+  const today = new Date(); today.setHours(0,0,0,0);
+  items.sort((a,b) => {
+    const da = a.dispatchDate ? Math.abs(new Date(a.dispatchDate) - today) : Infinity;
+    const db = b.dispatchDate ? Math.abs(new Date(b.dispatchDate) - today) : Infinity;
+    return da - db;
+  });
   let countText;
   if(q) countText = '搜尋「'+q+'」，共 '+items.length+' 筆';
   else if(curDateFilter) countText = '📅 '+curDateFilter+'，共 '+items.length+' 筆';
