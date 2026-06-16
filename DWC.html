@@ -437,12 +437,14 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
 <!-- Role switch modal -->
 <div class="modal-mask" id="modal-role">
   <div class="modal">
-    <h3>切換角色</h3>
-    <p>選擇登入身份以切換對應權限（原型示範用）</p>
-    <div class="modal-btns" style="flex-direction:column;gap:10px;">
+    <h3 id="role-modal-title">切換角色</h3>
+    <p id="role-modal-desc">選擇登入身份以切換對應權限（原型示範用）</p>
+    <div id="role-modal-btns" class="modal-btns" style="flex-direction:column;gap:10px;">
       <button class="btn primary" onclick="switchRoleTo('admin',true)">管理者</button>
-      <button class="btn secondary" onclick="switchRoleTo('engineer',true)">工程師</button>
+      <button class="btn secondary" onclick="showEngineerPicker()">工程師</button>
     </div>
+    <div id="role-eng-list" style="display:none;max-height:260px;overflow-y:auto;margin-bottom:14px;"></div>
+    <button id="role-eng-back" class="btn secondary" style="display:none;" onclick="hideEngineerPicker()">← 返回</button>
   </div>
 </div>
 
@@ -585,6 +587,7 @@ function updateCounts(){
 function render(){
   const q = document.getElementById('search-input').value.trim();
   let items = ORDERS.filter(o => {
+    if(currentRole === 'engineer' && o.engineer !== currentEngineer) return false;
     if(curCat !== 'all' && o.cat !== curCat) return false;
     if(curTeam !== 'all' && o.team !== curTeam) return false;
     if(curFilter === 'today' && o.specDate !== new Date().toLocaleDateString('sv-SE')) return false;
@@ -660,18 +663,44 @@ function goPage(page){
 
 /* ── Role ── */
 let currentRole = 'admin'; // 'admin' | 'engineer'
+let currentEngineer = '';  // 當前登入的工程師代號
 
-function openRoleModal(){ $('modal-role').classList.add('show'); }
-function switchRoleTo(role, fromModal){
+function openRoleModal(){
+  hideEngineerPicker();
+  $('modal-role').classList.add('show');
+}
+function showEngineerPicker(){
+  $('role-modal-title').textContent = '選擇工程師';
+  $('role-modal-desc').style.display = 'none';
+  $('role-modal-btns').style.display = 'none';
+  $('role-eng-back').style.display = '';
+  const engs = GROUPS.flatMap(g => g.engineers.map(e => ({name:e, team:g.name})));
+  const unique = [...new Map(engs.map(e => [e.name, e])).values()];
+  $('role-eng-list').innerHTML = unique.map(e =>
+    '<div class="eng-option" onclick="switchRoleTo(\'engineer\',true,\''+e.name+'\')">'+e.name+
+      '<span class="team-tag">'+e.team+'</span></div>'
+  ).join('');
+  $('role-eng-list').style.display = '';
+}
+function hideEngineerPicker(){
+  $('role-modal-title').textContent = '切換角色';
+  $('role-modal-desc').style.display = '';
+  $('role-modal-btns').style.display = '';
+  $('role-eng-list').style.display = 'none';
+  $('role-eng-back').style.display = 'none';
+}
+function switchRoleTo(role, fromModal, eng){
   currentRole = role;
+  if(eng) currentEngineer = eng;
   const badge = $('role-badge');
-  badge.textContent = role === 'admin' ? '管理者' : '工程師';
+  badge.textContent = role === 'admin' ? '管理者' : '工程師 '+currentEngineer;
   badge.className = 'role-badge' + (role === 'engineer' ? ' is-engineer' : '');
   document.querySelectorAll('.nav-groups-item').forEach(el => {
     el.style.display = role === 'admin' ? '' : 'none';
   });
   if(fromModal) closeModal('modal-role');
   if(currentOrderId) renderDetailActions();
+  render();
 }
 
 /* ── Detail page state ── */
@@ -1048,7 +1077,7 @@ function renderSchedule(){
   /* filter orders by expectedDate */
   let orders = ORDERS.filter(o => o.expectedDate && isSameMonth(o.expectedDate, scheduleMonth));
   if(currentRole === 'engineer'){
-    orders = orders.filter(o => o.engineer === 'E'); // 原型用 E 代表當前工程師
+    orders = orders.filter(o => o.engineer === currentEngineer);
   } else if(scheduleEngineer !== 'all'){
     orders = orders.filter(o => o.engineer === scheduleEngineer);
   }
