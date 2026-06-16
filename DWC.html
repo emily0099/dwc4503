@@ -455,7 +455,7 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
     <p id="role-modal-desc">選擇登入身份以切換對應權限（原型示範用）</p>
     <div id="role-modal-btns" class="modal-btns" style="flex-direction:column;gap:10px;">
       <button class="btn primary" onclick="switchRoleTo('admin',true)">管理者</button>
-      <button class="btn primary" style="background:#7c3aed;" onclick="switchRoleTo('foreman',true)">工頭</button>
+      <button class="btn primary" style="background:#7c3aed;" onclick="showForemanPicker()">工頭</button>
       <button class="btn secondary" onclick="showEngineerPicker()">工程師</button>
     </div>
     <div id="role-eng-list" style="display:none;max-height:260px;overflow-y:auto;margin-bottom:14px;"></div>
@@ -543,10 +543,10 @@ const ORDERS = [
   {id:'I20260605110036', storeNo:'232753', store:'新後勁', phone:'07-5910659', cat:'convert', catLabel:'轉換', address:'高雄市楠梓區後昌路139-1號', team:'柏南', engineer:'L', screenPos:'未確認', taskContent:'', dispatchDate:'2026-06-05', specDate:'', expectedDate:'', urgent:false, status:'pending'},
 ];
 const GROUPS = [
-  {name:'柏北', managers:['A','B'], engineers:['A','B','C','D','E'], pending:15},
-  {name:'柏中', managers:['A','B'], engineers:['F','G','H'], pending:9},
-  {name:'柏南', managers:['A','B'], engineers:['I','J','K','L'], pending:16},
-  {name:'柏花', managers:['A','B'], engineers:['M'], pending:1},
+  {name:'柏北', foreman:'甲', managers:['A','B'], engineers:['A','B','C','D','E'], pending:15},
+  {name:'柏中', foreman:'乙', managers:['A','B'], engineers:['F','G','H'], pending:9},
+  {name:'柏南', foreman:'丙', managers:['A','B'], engineers:['I','J','K','L'], pending:16},
+  {name:'柏花', foreman:'丁', managers:['A','B'], engineers:['M'], pending:1},
 ];
 const CATS = ['施工前','施工後','驗收單','其他'];
 
@@ -665,6 +665,7 @@ function renderGroups(){
   document.getElementById('group-list').innerHTML = GROUPS.map(g =>
     '<div class="group-card">'+
       '<div class="g-title"><span class="dot"></span>群組：'+g.name+'</div>'+
+      '<div class="g-members"><b>工頭：</b>'+g.foreman+'</div>'+
       '<div class="g-members"><b>管理者：</b>'+g.managers.join('、')+'</div>'+
       '<div class="g-members"><b>工程師：</b>'+g.engineers.join('、')+'</div>'+
       '<div class="g-pending">待處理工單：<b>'+g.pending+'</b> 件</div>'+
@@ -685,8 +686,9 @@ function goPage(page){
 }
 
 /* ── Role ── */
-let currentRole = 'admin'; // 'admin' | 'engineer'
+let currentRole = 'admin'; // 'admin' | 'foreman' | 'engineer'
 let currentEngineer = '';  // 當前登入的工程師代號
+let currentForeman = '';   // 當前登入的工頭名稱
 
 function openRoleModal(){
   hideEngineerPicker();
@@ -705,6 +707,21 @@ function showEngineerPicker(){
   ).join('');
   $('role-eng-list').style.display = '';
 }
+function showForemanPicker(){
+  $('role-modal-title').textContent = '選擇工頭';
+  $('role-modal-desc').style.display = 'none';
+  $('role-modal-btns').style.display = 'none';
+  $('role-eng-back').style.display = '';
+  $('role-eng-list').innerHTML = GROUPS.map(g =>
+    '<div class="eng-option" onclick="switchForeman(\''+g.foreman+'\')">'+g.foreman+
+      '<span class="team-tag">'+g.name+'</span></div>'
+  ).join('');
+  $('role-eng-list').style.display = '';
+}
+function switchForeman(name){
+  currentForeman = name;
+  switchRoleTo('foreman', true);
+}
 function hideEngineerPicker(){
   $('role-modal-title').textContent = '切換角色';
   $('role-modal-desc').style.display = '';
@@ -716,7 +733,7 @@ function switchRoleTo(role, fromModal, eng){
   currentRole = role;
   if(eng) currentEngineer = eng;
   const badge = $('role-badge');
-  badge.textContent = role === 'admin' ? '管理者' : role === 'foreman' ? '工頭' : '工程師 '+currentEngineer;
+  badge.textContent = role === 'admin' ? '管理者' : role === 'foreman' ? '工頭 '+currentForeman : '工程師 '+currentEngineer;
   badge.className = 'role-badge' + (role === 'engineer' ? ' is-engineer' : role === 'foreman' ? ' is-foreman' : '');
   document.querySelectorAll('.nav-groups-item').forEach(el => {
     el.style.display = (role === 'admin' || role === 'foreman') ? '' : 'none';
