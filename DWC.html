@@ -641,7 +641,7 @@ function render(){
     if(curCat !== 'all' && o.cat !== curCat) return false;
     if(curTeam !== 'all' && o.team !== curTeam) return false;
     if(curFilter === 'today' && o.specDate !== new Date().toLocaleDateString('sv-SE')) return false;
-    if(curFilter === 'pending' && getRuntimeStatus(o.id, o.status) !== 'new') return false;
+    if(curFilter === 'pending' && getRuntimeStatus(o.id, o.status) !== 'pending') return false;
     if(['draft','sent','verified','rejected','approved'].includes(curFilter) && getRuntimeStatus(o.id, o.status) !== curFilter) return false;
     if(curDateFilter && o.dispatchDate !== curDateFilter) return false;
     if(curSpecFilter === 'none' && o.specDate) return false;
