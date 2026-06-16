@@ -697,7 +697,8 @@ const STATUS_LABEL = {today:'今日施作', draft:'草稿未送出', pending:'�
 
 /* ── Groups page ── */
 function renderGroups(){
-  document.getElementById('group-list').innerHTML = GROUPS.map(g =>
+  const visibleGroups = currentRole === 'foreman' ? GROUPS.filter(g => g.name === currentForemanTeam) : GROUPS;
+  document.getElementById('group-list').innerHTML = visibleGroups.map(g =>
     '<div class="group-card">'+
       '<div class="g-title"><span class="dot"></span>群組：'+g.name+'</div>'+
       '<div class="g-members"><b>工頭：</b>'+g.foreman+'</div>'+
