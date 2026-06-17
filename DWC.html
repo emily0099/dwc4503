@@ -313,7 +313,7 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
 <!-- ══════════ GROUPS PAGE ══════════ -->
 <div class="phone" id="page-groups" style="display:none;">
   <div class="page-header">
-    <button class="back" onclick="goPage('home')">←</button>
+    <button class="back" onclick="goPage(_prevPage)">←</button>
     <h1>工班群組列表</h1>
     <div style="width:34px;"></div>
   </div>
@@ -760,7 +760,9 @@ function renderGroups(){
 }
 
 /* ── Page navigation ── */
+let _currentPage = 'home';
 function goPage(page){
+  if(page !== 'detail') _currentPage = page;
   document.getElementById('page-home').style.display   = page==='home'   ? 'flex' : 'none';
   document.getElementById('page-groups').style.display = page==='groups' ? 'flex' : 'none';
   document.getElementById('page-detail').style.display = page==='detail' ? 'flex' : 'none';
@@ -772,6 +774,7 @@ function goPage(page){
 }
 
 /* ── Role ── */
+let _prevPage = 'home'; // page to return to when pressing back from detail
 let currentRole = 'admin'; // 'admin' | 'foreman' | 'engineer'
 let currentEngineer = '';  // 當前登入的工程師代號
 let currentForeman = '';     // 當前登入的工頭名稱
@@ -854,7 +857,8 @@ function getOrderState(id){
   return orderStates[id];
 }
 
-function openOrder(id){
+function openOrder(id, fromPage){
+  _prevPage = fromPage || _currentPage || 'home';
   currentOrderId = id;
   state = getOrderState(id);
   populateOrderInfo();
