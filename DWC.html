@@ -212,7 +212,9 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
 .equip-db-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;gap:8px;}
 .equip-db-item.selected{border-color:#dc2626;background:#fff5f5;}
 .equip-db-item .eq-info{flex:1;min-width:0;}
-.equip-db-item .eq-type{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:2px;}
+.equip-db-item .eq-type-row{display:flex;align-items:center;gap:6px;margin-bottom:2px;}
+.equip-db-item .eq-type{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.equip-db-item .eq-cms-area{font-size:11px;border:1px solid #fca5a5;border-radius:4px;padding:2px 6px;color:var(--text);background:#fff;flex:1;min-width:0;}
 .equip-db-item .eq-main{font-size:13px;font-weight:700;color:var(--text);}
 .equip-db-item .eq-id{font-size:11px;color:var(--muted);margin-top:2px;}
 .equip-db-item .eq-btn{flex-shrink:0;border:none;border-radius:6px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;}
@@ -1027,6 +1029,10 @@ function goReport(){
   $('report-draft-banner').style.display = state.status==='draft' ? 'flex' : 'none';
   renderPhotoSummary();
   renderEquips();
+  removedEquipSearch = ''; removedEquipTypeFilter = 'all'; equipCmsArea = {};
+  // 從已存的 removedEquips 還原 cmsArea
+  state.removedEquips.forEach(e => { if(e.cmsArea) equipCmsArea[e.id] = e.cmsArea; });
+  $('removed-equip-search').value = '';
   renderRemovedEquips();
   dirty = false;
   showScreen('screen-report');
@@ -1095,13 +1101,22 @@ function updEquip(i,key,val){ state.equips[i][key]=val; dirty=true; }
 let removedEquipSearch = '';
 let removedEquipTypeFilter = 'all';
 let _imeComposing = false;
+let equipCmsArea = {}; // id -> CMS安裝區域 user-edited value
+
+function updEquipCmsArea(id, val){
+  equipCmsArea[id] = val;
+  // 如果已在選取清單中，同步更新
+  const r = state.removedEquips.find(e => e.id === id);
+  if(r) r.cmsArea = val;
+  dirty = true;
+}
 
 function toggleRemovedEquip(id){
   const eq = EQUIP_DB.find(e => e.id === id);
   if(!eq) return;
   const idx = state.removedEquips.findIndex(e => e.id === id);
   if(idx >= 0) state.removedEquips.splice(idx,1);
-  else state.removedEquips.push({id:eq.id,type:eq.type,brand:eq.brand,model:eq.model,area:eq.area,status:eq.status});
+  else state.removedEquips.push({id:eq.id,type:eq.type,brand:eq.brand,model:eq.model,area:eq.area,cmsArea:equipCmsArea[id]||'',status:eq.status});
   dirty = true;
   renderRemovedEquipsList();
 }
@@ -1182,7 +1197,10 @@ function renderRemovedEquipsList(){
       const sel = selectedIds.has(e.id);
       html += '<div class="equip-db-item'+(sel?' selected':'')+'">'+
         '<div class="eq-info">'+
-          '<div class="eq-type">'+esc(e.type)+(e.area?' · '+esc(e.area):'')+'</div>'+
+          '<div class="eq-type-row">'+
+            '<span class="eq-type">'+esc(e.type)+'</span>'+
+            (e.type==='螢幕'?'<input class="eq-cms-area" placeholder="CMS安裝區域" value="'+(equipCmsArea[e.id]||'').replace(/"/g,'&quot;')+'" onclick="event.stopPropagation()" oninput="updEquipCmsArea(\''+e.id.replace(/'/g,"\\'")+'\'  ,this.value)">':'')+
+          '</div>'+
           '<div class="eq-main">'+esc(e.brand)+' '+esc(e.model)+'</div>'+
           '<div class="eq-id">'+esc(e.id)+'</div>'+
         '</div>'+
@@ -1266,7 +1284,7 @@ function renderDone(){
     drc.style.display='';
     $('done-removed-equips').innerHTML=state.removedEquips.map(e=>
       '<div style="padding:8px 0;border-bottom:1px solid var(--line);">'+
-        '<span style="font-size:11px;color:var(--muted);font-weight:700;">'+esc(e.type)+'</span><br>'+
+        '<span style="font-size:11px;color:var(--muted);font-weight:700;">'+esc(e.type)+(e.cmsArea?' · '+esc(e.cmsArea):'')+'</span><br>'+
         '<b>'+esc(e.brand)+' '+esc(e.model)+'</b>'+
         '<br><span style="font-size:12px;color:var(--muted);">設備編號：'+esc(e.id)+'</span>'+
       '</div>'
