@@ -889,7 +889,7 @@ function renderDetailActions(){
   const btnArea = $('detail-btn-area');
   if(currentRole === 'admin' || currentRole === 'foreman'){
     const engBtn = o.engineer
-      ? '<button class="btn warn small" onclick="openAssignModal(\'change\')">變更工程師</button>'
+      ? '<button class="btn warn small" onclick="openAssignModal(\'change\')">安排工程師</button>'
       : '<button class="btn ghost-blue small" onclick="openAssignModal(\'assign\')">指定工程師</button>';
     btnArea.innerHTML = engBtn +
       '<button class="btn warn small" onclick="openAssignModal(\'team\')">變更派遣工班</button>' +
@@ -976,7 +976,7 @@ function openAssignModal(mode){
         '<span class="team-tag">'+g.engineers.length+' 人</span></div>'
     ).join('');
   } else {
-    $('assign-modal-title').textContent = mode === 'assign' ? '指定工程師' : '變更工程師';
+    $('assign-modal-title').textContent = mode === 'assign' ? '指定工程師' : '安排工程師';
     const engineers = GROUPS.flatMap(g => g.engineers.map(m => ({name:m, team:g.name})));
     const unique = [...new Map(engineers.map(e => [e.name, e])).values()];
     $('engineer-select-list').innerHTML = unique.map(e =>
