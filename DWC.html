@@ -665,13 +665,18 @@ function renderTeamFilters(){
 document.getElementById('search-input').addEventListener('input', render);
 
 function updateCounts(){
+  const roleOrders = ORDERS.filter(o => {
+    if(currentRole === 'engineer' && o.engineer !== currentEngineer) return false;
+    if(currentRole === 'foreman' && o.team !== currentForemanTeam) return false;
+    return true;
+  });
   ['all','dismantle','convert','repair','other'].forEach(cat => {
-    const n = cat === 'all' ? ORDERS.length : ORDERS.filter(o => o.cat === cat).length;
+    const n = cat === 'all' ? roleOrders.length : roleOrders.filter(o => o.cat === cat).length;
     const el = document.querySelector('.cat-chip[data-cat="'+cat+'"] .cnt');
     if(el) el.textContent = n;
   });
   const pendingEl = $('pending-count');
-  if(pendingEl) pendingEl.textContent = ORDERS.length;
+  if(pendingEl) pendingEl.textContent = roleOrders.length;
 }
 
 function render(){
@@ -824,6 +829,7 @@ function switchRoleTo(role, fromModal, eng){
   });
   if(fromModal) closeModal('modal-role');
   if(currentOrderId) renderDetailActions();
+  updateCounts();
   render();
 }
 
