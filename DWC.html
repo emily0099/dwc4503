@@ -483,6 +483,7 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
       <div class="card" id="done-removed-card">
         <div class="section-title">設備清單</div>
         <div class="removed-hint">記錄本次從門市拆除的設備</div>
+        <div id="done-removed-type-summary" style="margin-bottom:8px;margin-top:4px;"></div>
         <div class="summary-list" id="done-removed-equips"></div>
       </div>
       <div class="actions">
@@ -1280,6 +1281,11 @@ function renderDone(){
   const drc=$('done-removed-card');
   if(state.removedEquips.length){
     drc.style.display='';
+    // 各設備類型統計
+    const typeCounts = {};
+    state.removedEquips.forEach(e => { typeCounts[e.type] = (typeCounts[e.type]||0)+1; });
+    const typeSummary = Object.entries(typeCounts).map(([t,n])=>'<span style="display:inline-block;margin-right:10px;font-size:12px;font-weight:700;color:var(--text);">'+esc(t)+' <span style="color:var(--blue);">'+n+'</span> 台</span>').join('');
+    $('done-removed-type-summary').innerHTML = typeSummary;
     $('done-removed-equips').innerHTML=state.removedEquips.map(e=>
       '<div style="padding:8px 0;border-bottom:1px solid var(--line);">'+
         '<span style="font-size:11px;color:var(--muted);font-weight:700;">'+esc(e.type)+(e.area?' · '+esc(e.area):'')+'</span><br>'+
