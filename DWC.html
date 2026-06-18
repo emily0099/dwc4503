@@ -1124,10 +1124,7 @@ function openAssignModal(mode){
     const unique = [...new Map(all.map(e => [e.name, e])).values()];
     $('engineer-select-list').innerHTML = unique.map(e =>
       '<div class="eng-option" onclick="selectEngineer(\''+e.name+'\')">'+e.name+
-        '<span style="display:flex;gap:6px;align-items:center;">'+
-          (e.role==='工頭' ? '<span style="font-size:11px;background:#fef3c7;color:#92400e;border-radius:99px;padding:1px 7px;font-weight:700;">工頭</span>' : '')+
-          '<span class="team-tag">'+e.team+'</span>'+
-        '</span></div>'
+        '<span class="team-tag">'+e.team+'</span></div>'
     ).join('');
   }
   $('modal-engineer').classList.add('show');
