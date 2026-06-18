@@ -719,7 +719,7 @@ function render(){
     else if(rs === 'verified')  badges = '<span class="status-badge verified">🔖 待驗收</span>';
     else if(rs === 'rejected')  badges = '<span class="status-badge rejected">❌ 覆核未過</span>';
     else if(rs === 'sent')      badges = '<span class="status-badge sent">📤 待覆核</span>';
-    else if(rs === 'draft')     badges = '<span class="status-badge draft">📝 草稿未送出</span>';
+    else if(rs === 'draft')     badges = '<span class="status-badge draft">📝 草稿未送出</span><span class="status-badge scheduled" style="margin-left:6px;">處理中</span>';
     else if(rs === 'scheduled') badges = '<span class="status-badge scheduled">📅 已安排</span>';
     else if(o.specDate === todayStr) badges = '<span class="status-badge today">今日施作</span>';
     else                        badges = '<span class="status-badge pending">待處理</span>';
