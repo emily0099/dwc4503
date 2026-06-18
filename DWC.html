@@ -883,8 +883,7 @@ function goPage(page){
         sl.scrollTop = _scheduleScrollTop;
         window.scrollTo(0, _scheduleScrollTop);
       } else {
-        const todayEl = document.getElementById('sch-today-day');
-        if(todayEl) todayEl.scrollIntoView({behavior:'instant', block:'start'});
+        scrollToToday();
       }
     }));
   }
@@ -1534,13 +1533,18 @@ const WEEKDAYS = ['日','一','二','三','四','五','六'];
 let scheduleEngineer = 'all';
 let scheduleMonth = new Date(); // current view month
 
+function scrollToToday(){
+  const todayEl = $('sch-today-day');
+  if(!todayEl) return;
+  todayEl.scrollIntoView({behavior:'instant', block:'start'});
+  const bar = document.querySelector('#page-my .sch-month-bar');
+  if(bar) window.scrollBy(0, -bar.offsetHeight);
+}
+
 function jumpToToday(){
   scheduleMonth = new Date();
   renderSchedule();
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    const todayEl = $('sch-today-day');
-    if(todayEl) todayEl.scrollIntoView({behavior:'instant', block:'start'});
-  }));
+  requestAnimationFrame(() => requestAnimationFrame(() => scrollToToday()));
 }
 
 function shiftMonth(dir){
