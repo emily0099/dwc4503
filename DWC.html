@@ -263,6 +263,11 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
 .done-photo-grid .ph{border-radius:6px;overflow:hidden;border:1px solid var(--line);}
 .done-photo-grid .ph img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;}
 .done-photo-grid .ph .cap{font-size:11px;color:var(--muted);padding:3px 5px;background:#fff;line-height:1.3;}
+.done-photo-grid .ph img{cursor:zoom-in;}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:90;display:none;align-items:center;justify-content:center;padding:16px;}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;}
+.lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:28px;line-height:1;border-radius:99px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 </style>
 </head>
 <body>
@@ -570,6 +575,10 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
   </div>
 </div>
 
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
 <input type="file" id="photo-input" accept="image/*" multiple style="display:none">
 <div class="toast" id="toast"></div>
 
@@ -1434,6 +1443,8 @@ function askSubmit(){
 }
 
 function closeModal(id){ $(id).classList.remove('show'); }
+function openLightbox(src){ $('lightbox-img').src = src; $('lightbox').classList.add('open'); }
+function closeLightbox(){ $('lightbox').classList.remove('open'); $('lightbox-img').src=''; }
 
 function confirmSubmit(){
   closeModal('modal-submit'); state.status='sent'; state.sentTime=nowStr();
@@ -1453,7 +1464,7 @@ function renderDone(){
     if(!state.photos[cat].length) return;
     const card=document.createElement('div'); card.className='card';
     card.innerHTML='<div class="section-title">'+cat+' <span class="badge count">'+state.photos[cat].length+'</span></div>'+
-      '<div class="done-photo-grid">'+state.photos[cat].map(p=>'<div class="ph"><img src="'+p.src+'">'+(p.note?'<div class="cap">'+esc(p.note)+'</div>':'')+'</div>').join('')+'</div>';
+      '<div class="done-photo-grid">'+state.photos[cat].map(p=>'<div class="ph"><img src="'+p.src+'" onclick="openLightbox(this.src)">'+(p.note?'<div class="cap">'+esc(p.note)+'</div>':'')+'</div>').join('')+'</div>';
     wrap.appendChild(card);
   });
   if(!photoTotal()){ const c=document.createElement('div'); c.className='card'; c.innerHTML='<div class="section-title">派工照片</div><div class="readonly-note">未上傳照片</div>'; wrap.appendChild(c); }
