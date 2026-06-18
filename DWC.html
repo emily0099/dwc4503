@@ -869,9 +869,10 @@ function goPage(page){
   if(page==='groups') renderGroups();
   if(page==='home')   render();
   if(page==='my'){
-    renderSchedule();
     const fromDetail = _returnToSchedule;
     _returnToSchedule = false;
+    if(!fromDetail) scheduleMonth = new Date();
+    renderSchedule();
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const sl = document.getElementById('schedule-list');
       if(!sl) return;
@@ -879,8 +880,13 @@ function goPage(page){
         sl.scrollTop = _scheduleScrollTop;
       } else {
         const todayEl = document.getElementById('sch-today-day');
-        if(todayEl) sl.scrollTop = todayEl.offsetTop - sl.offsetTop;
-        else sl.scrollTop = 0;
+        if(todayEl){
+          const slRect = sl.getBoundingClientRect();
+          const todayRect = todayEl.getBoundingClientRect();
+          sl.scrollTop = sl.scrollTop + (todayRect.top - slRect.top);
+        } else {
+          sl.scrollTop = 0;
+        }
       }
     }));
   }
