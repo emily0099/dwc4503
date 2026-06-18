@@ -1118,11 +1118,16 @@ function openAssignModal(mode){
     ).join('');
   } else {
     $('assign-modal-title').textContent = mode === 'assign' ? '指定工程師' : '安排工程師';
-    const engineers = GROUPS.flatMap(g => g.engineers.map(m => ({name:m, team:g.name})));
-    const unique = [...new Map(engineers.map(e => [e.name, e])).values()];
+    const foremen = GROUPS.map(g => ({name:g.foreman, team:g.name, role:'工頭'}));
+    const engineers = GROUPS.flatMap(g => g.engineers.map(m => ({name:m, team:g.name, role:'工程師'})));
+    const all = [...foremen, ...engineers];
+    const unique = [...new Map(all.map(e => [e.name, e])).values()];
     $('engineer-select-list').innerHTML = unique.map(e =>
       '<div class="eng-option" onclick="selectEngineer(\''+e.name+'\')">'+e.name+
-        '<span class="team-tag">'+e.team+'</span></div>'
+        '<span style="display:flex;gap:6px;align-items:center;">'+
+          (e.role==='工頭' ? '<span style="font-size:11px;background:#fef3c7;color:#92400e;border-radius:99px;padding:1px 7px;font-weight:700;">工頭</span>' : '')+
+          '<span class="team-tag">'+e.team+'</span>'+
+        '</span></div>'
     ).join('');
   }
   $('modal-engineer').classList.add('show');
