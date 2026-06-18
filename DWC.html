@@ -772,10 +772,10 @@ function goPage(page){
   if(page==='home')   render();
   if(page==='my'){
     renderSchedule();
-    requestAnimationFrame(() => {
-      const sl = $('schedule-list');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const sl = document.getElementById('schedule-list');
       if(sl) sl.scrollTop = _scheduleScrollTop;
-    });
+    }));
   }
 }
 
