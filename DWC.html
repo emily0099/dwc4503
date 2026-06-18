@@ -1652,12 +1652,8 @@ renderTeamFilters();
 render();
 /* today date icon */
 (function(){
-  const t = new Date();
-  const dayAbbr = ['SUN','MON','TUE','WED','THU','FRI','SAT'][t.getDay()];
   const el = document.getElementById('today-date-num');
-  if(el) el.textContent = t.getDate();
-  const topBar = document.querySelector('#page-my .month-nav + .month-label + button > div:first-child');
-  if(topBar) topBar.textContent = dayAbbr;
+  if(el) el.textContent = new Date().getDate();
 })();
 </script>
 </body>
