@@ -1441,7 +1441,7 @@ function renderSchedule(){
       '<div class="sch-events">'+
         groups[dateStr].map(o =>
           '<div class="sch-event" data-cat="'+o.cat+'" onclick="openOrder(\''+o.id+'\',\'my\')">'+
-            '<div class="sch-event-store">'+o.store+'</div>'+
+            '<div class="sch-event-store">'+o.store+(o.venue?'<span style="font-size:11px;font-weight:600;background:rgba(255,255,255,.3);border-radius:99px;padding:1px 7px;margin-left:6px;">'+o.venue+'</span>':'')+'</div>'+
             '<div class="sch-event-meta">工單 #'+o.id+'</div>'+
             (o.address ? '<div class="sch-event-meta" style="opacity:.8;">'+o.address+'</div>' : '')+
             ((currentRole==='admin'||currentRole==='foreman') && scheduleEngineer==='all'
