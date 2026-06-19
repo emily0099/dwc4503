@@ -221,6 +221,7 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
 .equip-item .equip-row:last-child{margin-bottom:0;}
 .equip-item input,.equip-item select{flex:1;border:1px solid var(--line);border-radius:6px;padding:9px 10px;font-size:14px;background:#fff;}
 .equip-item input.qty{max-width:90px;}
+.qty-step{width:32px;height:32px;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
 .removed-hint{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:8px;}
 .equip-search{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:14px;margin-bottom:8px;box-sizing:border-box;}
 .equip-db-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;}
@@ -1353,12 +1354,27 @@ function selectEquipAdd(id,type,brand,model){
   closeEquipAddPanel();
 }
 function equipAddManual(){
-  state.equips.push({id:'',type:'',brand:'',model:'',qty:1,_manual:true});
+  state.equips.push({ids:[''],type:'',brand:'',model:'',qty:1,_manual:true});
   renderEquips(); dirty=true;
   closeEquipAddPanel();
 }
 function delEquip(i){ state.equips.splice(i,1); renderEquips(); dirty=true; }
 function updEquip(i,key,val){ state.equips[i][key]=val; dirty=true; }
+function updEquipId(i,j,val){ if(!state.equips[i].ids) state.equips[i].ids=[]; state.equips[i].ids[j]=val; dirty=true; }
+function updEquipType(i,val){ state.equips[i].type=val; state.equips[i].brand=''; state.equips[i].model=''; dirty=true; renderEquips(); }
+function pickBrandModel(i,brand,model){ state.equips[i].brand=brand; state.equips[i].model=model; dirty=true; renderEquips(); }
+function stepEquipQty(i,delta){
+  const eq=state.equips[i];
+  const next=Math.max(1,(+eq.qty||1)+delta);
+  eq.qty=next;
+  if(eq._manual){
+    const ids=eq.ids||[''];
+    while(ids.length<next) ids.push('');
+    ids.length=next;
+    eq.ids=ids;
+  }
+  dirty=true; renderEquips();
+}
 
 let removedEquipSearch = '';
 let removedEquipTypeFilter = 'all';
@@ -1478,29 +1494,65 @@ function renderEquips(){
     const d=document.createElement('div');
     d.className='equip-item';
     if(eq._manual || !eq.id){
+      // Build brand/model suggestion chips from warehouse
+      let suggestHtml = '';
+      if(eq.type){
+        const order2 = ORDERS.find(o=>o.id===currentOrderId);
+        const team2 = order2 ? order2.team : '';
+        const seen2 = new Set();
+        const combos = WAREHOUSE_DB.filter(e=>e.team===team2&&e.type===eq.type).filter(e=>{
+          const k=e.brand+'|'+e.model; if(seen2.has(k)) return false; seen2.add(k); return true;
+        });
+        const mNum=s=>(+((s||'').match(/\d+/)||[0])[0])||0;
+        const brandMax={};
+        combos.forEach(e=>{const n=mNum(e.model);if(!brandMax[e.brand]||n>brandMax[e.brand])brandMax[e.brand]=n;});
+        combos.sort((a,b)=>{
+          if(a.brand!==b.brand){const d=(brandMax[b.brand]||0)-(brandMax[a.brand]||0);return d||a.brand.localeCompare(b.brand,'zh-TW');}
+          return mNum(a.model)-mNum(b.model);
+        });
+        combos.splice(20);
+        if(combos.length){
+          suggestHtml='<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px;">'+
+            combos.map(e=>{
+              const safe=s=>s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+              const sel=eq.brand===e.brand&&eq.model===e.model;
+              return '<button type="button" style="background:'+(sel?'var(--blue)':'#eff6ff')+';color:'+(sel?'#fff':'var(--blue)')+';border:1px solid '+(sel?'var(--blue)':'#bfdbfe')+';border-radius:16px;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap;" onclick="pickBrandModel('+i+',\''+safe(e.brand)+'\',\''+safe(e.model)+'\')">'+esc(e.brand)+' '+esc(e.model)+'</button>';
+            }).join('')+
+          '</div>';
+        }
+      }
+      const qtyStepperM='<div class="equip-row" style="margin-bottom:0;margin-top:4px;">'+
+        '<span style="font-size:13px;color:var(--muted);flex:1;align-self:center;">數量</span>'+
+        '<div style="display:flex;align-items:center;gap:8px;">'+
+          '<button type="button" class="qty-step" onclick="stepEquipQty('+i+',-1)">−</button>'+
+          '<span style="min-width:24px;text-align:center;font-size:16px;font-weight:700;">'+(+eq.qty||1)+'</span>'+
+          '<button type="button" class="qty-step" onclick="stepEquipQty('+i+',1)">＋</button>'+
+        '</div>'+
+      '</div>';
       d.innerHTML='<button class="del-eq" onclick="delEquip('+i+')">刪除</button>'+
         '<div class="equip-row">'+
-          '<select style="flex:1;" onchange="updEquip('+i+',\'type\',this.value)">'+
+          '<select style="flex:1;" onchange="updEquipType('+i+',this.value)">'+
             '<option value="">設備類型</option>'+
             ['Edge','播放器','螢幕','HUB','主機','其他'].map(t=>'<option '+(eq.type===t?'selected':'')+'>'+t+'</option>').join('')+
           '</select>'+
-          '<input class="qty" type="number" min="1" value="'+(eq.qty||1)+'" oninput="updEquip('+i+',\'qty\',this.value)">'+
         '</div>'+
-        '<div class="equip-row">'+
-          '<input type="text" placeholder="品牌" value="'+(eq.brand||'').replace(/"/g,'&quot;')+'" oninput="updEquip('+i+',\'brand\',this.value)" style="flex:1;">'+
-          '<input type="text" placeholder="型號" value="'+(eq.model||'').replace(/"/g,'&quot;')+'" oninput="updEquip('+i+',\'model\',this.value)" style="flex:1;">'+
-        '</div>'+
-        '<div class="equip-row">'+
-          '<input type="text" placeholder="設備編號" value="'+(eq.id||'').replace(/"/g,'&quot;')+'" oninput="updEquip('+i+',\'id\',this.value)" style="flex:1;">'+
-        '</div>';
+        suggestHtml+
+        (eq.type==='其他'?
+          '<div class="equip-row">'+
+            '<input type="text" placeholder="品牌" value="'+(eq.brand||'').replace(/"/g,'&quot;')+'" oninput="updEquip('+i+',\'brand\',this.value)" style="flex:1;">'+
+            '<input type="text" placeholder="型號" value="'+(eq.model||'').replace(/"/g,'&quot;')+'" oninput="updEquip('+i+',\'model\',this.value)" style="flex:1;">'+
+          '</div>'
+        :'')+
+        (eq.ids||['']).map((sid,j)=>'<div class="equip-row"><input type="text" placeholder="設備編號'+(eq.qty>1?' '+(j+1):'')+'" value="'+(sid||'').replace(/"/g,'&quot;')+'" oninput="updEquipId('+i+','+j+',this.value)" style="flex:1;"></div>').join('')+
+        qtyStepperM;
     } else {
       d.innerHTML='<button class="del-eq" onclick="delEquip('+i+')">刪除</button>'+
         '<div style="margin-bottom:2px;"><span class="eq-type">'+esc(eq.type)+'</span></div>'+
         '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;">'+esc(eq.brand)+' '+esc(eq.model)+'</div>'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">'+esc(eq.id)+'</div>'+
         '<div class="equip-row" style="margin-bottom:0;">'+
-          '<span style="font-size:13px;color:var(--muted);flex:1;align-self:center;">數量</span>'+
-          '<input class="qty" type="number" min="1" value="'+(eq.qty||1)+'" oninput="updEquip('+i+',\'qty\',this.value)">'+
+          '<span style="font-size:13px;color:var(--muted);flex:1;">數量</span>'+
+          '<span style="font-size:16px;font-weight:700;">1</span>'+
         '</div>';
     }
     list.appendChild(d);
@@ -1555,7 +1607,10 @@ function renderDone(){
     wrap.appendChild(card);
   });
   if(!photoTotal()){ const c=document.createElement('div'); c.className='card'; c.innerHTML='<div class="section-title">派工照片</div><div class="readonly-note">未上傳照片</div>'; wrap.appendChild(c); }
-  $('done-equips').innerHTML=state.equips.length?state.equips.map(e=>'<b>'+esc(e.type||'—')+'</b> '+esc(e.brand||'')+' '+esc(e.model||'')+' × '+e.qty+(e.id?' <span style="color:var(--muted);font-size:12px;">('+esc(e.id)+')</span>':'')).join('<br>'):'<span class="readonly-note">無</span>';
+  $('done-equips').innerHTML=state.equips.length?state.equips.map(e=>{
+    const idStr=e.ids?e.ids.filter(x=>x).map(x=>'('+esc(x)+')').join(' '):(e.id?'('+esc(e.id)+')':'');
+    return '<b>'+esc(e.type||'—')+'</b> '+esc(e.brand||'')+' '+esc(e.model||'')+' × '+e.qty+(idStr?' <span style="color:var(--muted);font-size:12px;">'+idStr+'</span>':'');
+  }).join('<br>'):'<span class="readonly-note">無</span>';
   const drc=$('done-removed-card');
   if(state.removedEquips.length){
     drc.style.display='';
