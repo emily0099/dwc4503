@@ -1851,8 +1851,9 @@ function setScheduleEngineer(eng){
 }
 
 function getWeekLabel(d){
+  const day = d.getDay() || 7; // Sunday=0 → treat as 7 so it stays in Mon–Sun week
   const start = new Date(d);
-  start.setDate(d.getDate() - d.getDay() + 1); // Monday
+  start.setDate(d.getDate() - day + 1);
   const end = new Date(start); end.setDate(start.getDate() + 6);
   const fmt = x => (x.getMonth()+1)+'月'+x.getDate()+'日';
   return fmt(start) + ' - ' + fmt(end);
