@@ -1285,8 +1285,11 @@ function openAssignModal(mode){
     ).join('');
   } else {
     $('assign-modal-title').textContent = mode === 'assign' ? '指定工程師' : '安排工程師';
-    const foremen = GROUPS.map(g => ({name:g.foreman, team:g.name, role:'工頭'}));
-    const engineers = GROUPS.flatMap(g => g.engineers.map(m => ({name:m, team:g.name, role:'工程師'})));
+    const sourceGroups = currentRole === 'foreman'
+      ? GROUPS.filter(g => g.name === currentForemanTeam)
+      : GROUPS;
+    const foremen = sourceGroups.map(g => ({name:g.foreman, team:g.name, role:'工頭'}));
+    const engineers = sourceGroups.flatMap(g => g.engineers.map(m => ({name:m, team:g.name, role:'工程師'})));
     const all = [...foremen, ...engineers];
     const unique = [...new Map(all.map(e => [e.name, e])).values()];
     $('engineer-select-list').innerHTML = unique.map(e =>
