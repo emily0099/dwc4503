@@ -38,7 +38,7 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
 /* ── Detail/page header ── */
 .page-header{background:var(--blue);color:#fff;padding:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
 .page-header .back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;padding:2px 6px;}
-.page-header h1{font-size:18px;flex:1;text-align:center;margin-right:34px;}
+.page-header h1{font-size:18px;flex:1;text-align:center;margin-right:34px;display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;flex-wrap:wrap;}
 
 /* ── Search ── */
 .search-wrap{padding:12px 14px 0;}
@@ -212,6 +212,7 @@ body{background:#cfd8e3;display:flex;justify-content:center;min-height:100vh;}
 .field label .req{color:var(--red);}
 .field label .hint{font-weight:400;color:var(--muted);font-size:12px;}
 .field input[type="datetime-local"],.field input[type="text"],.field textarea{width:100%;max-width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:15px;background:#fff;color:var(--text);}
+.field input[type="datetime-local"]{-webkit-appearance:none;appearance:none;}
 .field textarea{min-height:96px;resize:vertical;}
 .field input:focus,.field textarea:focus{outline:2px solid #bfdbfe;border-color:var(--blue);}
 .photo-counts{text-align:center;font-size:15px;line-height:1.9;padding:4px 0;}
